@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<canvas id="gl-canvas" width="800" height="800">
+</canvas>
+<div id="xyz container">
+    <div id="xyz" style="display: none;">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/range -->
+    <!-- https://www.w3schools.com/jsref/prop_style_display.asp -->
+    <label for="rotationX">Rotate X</label>
+    <input type="range" min="-180" max="180" value="0" id="rotationX">
+    <label for="rotationY">Rotate Y</label>
+    <input type="range" min="-180" max="180" value="0" id="rotationY">
+    <label for="rotationZ">Rotate Z</label>
+    <input type="range" min="-180" max="180" value="0" id="rotationZ">
+    <label for="tranX">Translate X</label>
+    <input type="range" min="-100" max="100" value="0" step="any" id="tranX">
+    <label for="tranY">Translate Y</label>
+    <input type="range" min="-100" max="100" value="0" step="any" id="tranY">
+    <label for="tranZ">Translate Z</label>
+    <input type="range" min="0.0" max="1.0" value="0.1" step="any" id="tranZ">
+    </div>
+</div>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shading Cow</title>
+    <script src="Common/webgl-utils.js"></script>
+    <script src="Common/initShaders.js"></script>
+    <script src="Common/MV.js"></script>
+    <script src="cow.js"></script>
+    <script src="main.js"></script>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec3 posVec;
+        attribute vec3 norV;
+        uniform mat4 mat;
+        varying vec3 mWorld;
+        varying vec3 mProj;
+        void main()
+        {
+            mWorld = mat3(mat) * norV;
+            mProj = vec3(10, 10, -100) - (mat * vec4(posVec, 1.0)).xyz;
+            gl_Position = mat * vec4(posVec, 1.0) * vec4(1.0, 1.0, -1.0, 1.0);
+        }
+    </script>
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform vec3 rLightColor;
+        uniform vec3 rLightDirection;
+        uniform vec3 cowColor;
+        uniform vec3 panning_spotlightDir;
+        uniform vec3 pLightColor;
+        varying vec3 mProj;
+        varying vec3 mWorld;
+       
+        void main()
+        {
+            vec3 normNorm = normalize(mWorld);
+            vec3 rLightN = normalize(rLightDirection);
+            vec3 pLightN = normalize(panning_spotlightDir);
+            float applyRLight = max(dot(normNorm, rLightN), 0.0);
+            float applyPLight = max(dot(normNorm, pLightN), 0.0);
+            gl_FragColor = vec4((cowColor + applyRLight * rLightColor + applyPLight * pLightColor), 1.0);    
+        }
+    </script>
+</head>
+</html>
